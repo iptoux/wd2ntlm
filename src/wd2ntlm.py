@@ -185,7 +185,7 @@ def worker(queue, thread_id, progressbar, data_processed):
 
             log.debug(f"[T|{thread_id}]: Hash \t-> {hash_result.hex()}")
 
-            if data_out_mode == OFile.JSON:
+            if data_out_mode == OFile.JSON or data_out_mode == OFile.CSV:
                 data_converted[file_name_wordlist.name].update({
                     hash_result.hex():item
                 })
@@ -271,13 +271,24 @@ def main(file:str, threads:int = 1, debug = False):
 
     parseFile(file_name_wordlist, threads)
     log.info(f"Done, [{len(data_processed)}/{file_name_data['Lines']}] Skipped {len(data_dupes)} duplicates")
-    
+    log.debug(f"Dupes: {data_dupes}")
+
+    log.info(f"Saving data to file: {file_name_ntlmhashes}.{data_out_mode.name.lower()}")
+
     if data_out_mode == OFile.JSON:
         with open(f"{file_name_ntlmhashes}.json",'w') as f:
             f.write(json.dumps(data_converted,indent=4))
         f.close()
+    elif data_out_mode == OFile.CSV:
+        import csv
         
-    log.info(f"Saving data to file: {file_name_ntlmhashes}.{data_out_mode.name.lower()}")
+        with open(f"{file_name_ntlmhashes}.csv",'w') as f:
+            w = csv.writer(f)
+
+            rows = data_converted.get(list(data_converted.keys())[0])
+            
+            w.writerows(rows.items())
+        f.close()
 
     return
 
