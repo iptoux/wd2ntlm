@@ -187,7 +187,7 @@ def worker(queue, thread_id, progressbar, data_processed):
 
             if data_out_mode == OFile.JSON:
                 data_converted[file_name_wordlist.name].update({
-                    item:hash_result.hex()
+                    hash_result.hex():item
                 })
 
             log.debug(f"[T|{thread_id}]: Saving into database.")
