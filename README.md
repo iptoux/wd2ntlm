@@ -12,7 +12,7 @@ SQLite3 is the default because it's used as a backend to store passwords on erro
 Output Options:
   --csv                 output file should be in csv fromat.
   --json                output file should be in JSON fromat.
-  --xlxs                output file should be in Excel fromat.
+  --xlsx                output file should be in Excel fromat.
 ```
 
 There are also some extra features like **define how many threads** should be used, or **debug** output.
@@ -20,7 +20,7 @@ There are also some extra features like **define how many threads** should be us
 ## Usage
 
 ```bash
-usage: wd2ntlm [-h] [-d] -f FILE -o FILE [--csv] [--json] [--xlxs] [-t N] [-v]
+usage: wd2ntlm [-h] [-d] -f FILE -o FILE [--csv] [--json] [--xlsx] [-t N] [-v]
 
 options:
   -h, --help            show this help message and exit
@@ -43,7 +43,8 @@ There is only one package needed, just clone repo and setup requirements.txt
 git clone https://github.com/iptoux/wd2ntlm.git
 cd wd2ntlm
 pip install -r requirements.txt
-python3 src/wd2ntlm.py
+chmod +x src/wd2ntlm.py
+./wd2ntlm.py
 ```
 
 ## WARNING
@@ -52,6 +53,5 @@ It hasn't been tested with a large file like rockyou.txt (xxGB), testing and wor
 
 ### ToDo
 
-+ xlxs
-+ csv
-  
++ cleanUp
++ refactor
