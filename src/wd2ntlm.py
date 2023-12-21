@@ -53,7 +53,15 @@ manager = enlighten.get_manager()
 thread_local = threading.local()
 
 
-def sqlConn(db: str):
+def sqlConn(db: str) -> None:
+    """
+    The function `sqlConn` creates a connection to a SQLite database and creates a table named "results"
+    if it does not already exist.
+    
+    :param db: The `db` parameter is a string that represents the name of the database file that you
+    want to connect to or create if it doesn't exist
+    :type db: str
+    """
     conn = sqlite3.Connection(database=db)
     cursor = conn.cursor()
     cursor.execute('''
@@ -67,10 +75,20 @@ def sqlConn(db: str):
     cursor.close()
     conn.close()
 
-    return
-
-
 def simpleLog(name: str|None, level: int|str):
+    """
+    The function `simpleLog` is a Python function that sets up a basic logging configuration and returns
+    a logger object.
+    
+    :param name: The `name` parameter is a string that represents the name of the logger. It is optional
+    and can be set to `None` if no specific name is provided
+    :type name: str|None
+    :param level: The `level` parameter in the `simpleLog` function can accept either an integer or a
+    string. It represents the logging level for the logger. The logging levels are defined in the
+    `logging` module and include the following options:
+    :type level: int|str
+    :return: a logger object that can be used for logging messages.
+    """
 
     log_date_format = '%m/%d/%Y %I:%M:%S %p'
     log_formatter = '%(asctime)s - %(name)s.%(funcName)-10s - %(levelname)-8s :: %(message)s'
@@ -88,6 +106,17 @@ def simpleLog(name: str|None, level: int|str):
     return log
 
 def fileInfo(file: Path):
+    """
+    The fileInfo function takes a file path as input and returns a dictionary containing information
+    about the file, such as its size, number of lines, owner, group, and modification and creation
+    timestamps.
+    
+    :param file: The `file` parameter is of type `Path` and represents the path to the file for which
+    you want to retrieve information
+    :type file: Path
+    :return: The function `fileInfo` returns a dictionary `file_name_data` that contains information
+    about the file.
+    """
     
     global file_name_data
 
@@ -130,6 +159,18 @@ def fileInfo(file: Path):
     return file_name_data
 
 def fileLoad(file: Path, threads: int = 1):
+    """
+    The function `fileLoad` reads the contents of a file, puts each word into a queue, and then converts
+    the words using multiple threads.
+    
+    :param file: The `file` parameter is the path to the file that you want to load. It should be of
+    type `Path`
+    :type file: Path
+    :param threads: The "threads" parameter specifies the number of threads to use for processing the
+    file, defaults to 1
+    :type threads: int (optional)
+    :return: The function `fileLoad` does not explicitly return anything.
+    """
 
     global data_queue, manager, data_converted
 
@@ -163,10 +204,26 @@ def fileLoad(file: Path, threads: int = 1):
     
     return
 
-def fileSave(target):
+def fileSave(format):
     return
 
 def worker(queue, thread_id, progressbar, data_processed):
+    """
+    The `worker` function processes items from a queue, calculates the MD4 hash of each item, saves the
+    item and its hash into a database, and updates a progress bar.
+    
+    :param queue: The `queue` parameter is a queue object that contains the items to be processed by the
+    worker function. Each worker thread will retrieve items from this queue and process them
+    :param thread_id: The `thread_id` parameter is used to identify the thread that the worker function
+    is running on. It can be any value that uniquely identifies the thread, such as an integer or a
+    string. This parameter is useful for logging and debugging purposes to track the progress of each
+    thread
+    :param progressbar: The `progressbar` parameter is a progress bar object that is used to track the
+    progress of the worker thread. It is updated each time an item is processed from the queue
+    :param data_processed: The `data_processed` parameter is a set that keeps track of the items that
+    have already been processed by the worker. It is used to avoid processing duplicate items from the
+    queue
+    """
     
     global data_converted
     log.info(f"[T|{thread_id}]: I'm alive!")
@@ -206,6 +263,14 @@ def worker(queue, thread_id, progressbar, data_processed):
         queue.task_done()
 
 def workerDb(thread_id):
+    """
+    The function `workerDb` opens a new connection to a SQLite database and assigns it to a thread-local
+    variable.
+    
+    :param thread_id: The `thread_id` parameter is an identifier for the current thread. It is used to
+    differentiate between different threads when logging messages or performing other operations
+    specific to a particular thread
+    """
     if hasattr(thread_local, 'db_connection') and thread_local.db_connection:
         log.debug(f"[T|{thread_id}]: closing stalled connection.")
         thread_local.db_connection.close()
@@ -215,6 +280,19 @@ def workerDb(thread_id):
     thread_local.db_cursor = thread_local.db_connection.cursor()
 
 def workerMgr(thread_count, word_queue,progressbar):
+    """
+    The function `workerMgr` starts a specified number of worker threads to process words from a queue,
+    and waits for all threads to finish before closing any open database connections.
+    
+    :param thread_count: The `thread_count` parameter specifies the number of worker threads to create.
+    These threads will be responsible for processing the words in the `word_queue`
+    :param word_queue: The `word_queue` parameter is a queue that holds the words that need to be
+    processed by the worker threads. Each worker thread will take a word from the queue and process it
+    :param progressbar: The `progressbar` parameter is a variable that is passed to the `workerMgr`
+    function. It is used to track the progress of the workers as they process the words in the
+    `word_queue`. It is likely an instance of a progress bar class or module that provides methods for
+    updating and displaying the
+    """
 
     global data_processed
 
@@ -244,6 +322,23 @@ def workerMgr(thread_count, word_queue,progressbar):
     log.info("All workers finished!")
 
 def main(file:str, threads:int = 1, debug = False):
+    """
+    The main function takes a file name, number of threads, and a debug flag as input, and performs
+    various operations on the file, including loading data, processing duplicates, and saving the data
+    in different formats.
+    
+    :param file: The `file` parameter is a string that represents the path to the input file. It is
+    required for the function to run
+    :type file: str
+    :param threads: The `threads` parameter specifies the number of threads to use during the conversion
+    process. It determines how many parallel processes will be used to convert the data. By default, it
+    is set to 1, meaning no parallel processing will be used, defaults to 1
+    :type threads: int (optional)
+    :param debug: The `debug` parameter is a boolean flag that determines whether debug logging should
+    be enabled or not. If `debug` is set to `True`, then debug logging will be enabled. If `debug` is
+    set to `False` (default), then debug logging will be disabled, defaults to False (optional)
+    :return: The function `main` does not explicitly return anything.
+    """
 
     global file_name_wordlist 
     file_name_wordlist = Path(file)
