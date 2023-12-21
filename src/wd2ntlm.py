@@ -87,7 +87,7 @@ def simpleLog(name: str|None, level: int|str):
 
     return log
 
-def getFileInfo(file: Path):
+def fileInfo(file: Path):
     
     global file_name_data
 
@@ -129,7 +129,7 @@ def getFileInfo(file: Path):
     
     return file_name_data
 
-def parseFile(file: Path, threads: int = 1):
+def fileLoad(file: Path, threads: int = 1):
 
     global data_queue, manager, data_converted
 
@@ -163,6 +163,8 @@ def parseFile(file: Path, threads: int = 1):
     
     return
 
+def fileSave(target):
+    return
 
 def worker(queue, thread_id, progressbar, data_processed):
     
@@ -260,7 +262,7 @@ def main(file:str, threads:int = 1, debug = False):
     log.info("Init SQLite3 for storage.")
     sqlConn(db=f"{file_name_ntlmhashes.name}.sqlite3")
 
-    file_info = getFileInfo(file_name_wordlist)
+    file_info = fileInfo(file_name_wordlist)
     for key,val in file_info.items():
         if key == "Size" or key == "Lines":
             log.info(f"\t{key} => {val}")
@@ -269,7 +271,7 @@ def main(file:str, threads:int = 1, debug = False):
 
     log.info(f"Threads to use: {threads} (during convert)")
 
-    parseFile(file_name_wordlist, threads)
+    fileLoad(file_name_wordlist, threads)
     log.info(f"Done, [{len(data_processed)}/{file_name_data['Lines']}] Skipped {len(data_dupes)} duplicates")
     log.debug(f"Dupes: {data_dupes}")
 
@@ -291,17 +293,26 @@ def main(file:str, threads:int = 1, debug = False):
         f.close()
     elif data_out_mode == OFile.XLSX:
         from openpyxl import Workbook
+        from openpyxl.utils.cell import get_column_letter
+        from openpyxl.styles import Font
+
         xlsx = Workbook()
         sheet = xlsx.active
         sheet.title = 'wd2ntlm'
+        
+        headers = ['HASH','WORD']
+        sheet.append(headers)
 
+        row=2
+        sheet.cell(row=row-1, column=1).font = Font(bold=True)
+        sheet.cell(row=row-1, column=2).font = Font(bold=True)
+        sheet.column_dimensions[get_column_letter(1)].width = 50
+        sheet.column_dimensions[get_column_letter(2)].width = 20
 
-        sheet["A1"] = "HASH"
-        sheet["B1"] = "WORD"
 
         for row, (hash, word) in enumerate(data_converted.get(list(data_converted.keys())[0]).items(), start=2):
-            sheet [f"A{row}"] = hash
-            sheet [f"B{row}"] = word
+             sheet[f"A{row}"] = hash
+             sheet[f"B{row}"] = word
 
         xlsx.save(f"{file_name_ntlmhashes}.{data_out_mode.name.lower()}")
 
