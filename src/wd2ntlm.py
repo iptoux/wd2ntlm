@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__version__ = "0.1.5"
+__version__ = "0.2.0"
 
 # Get command line arguments
 import argparse
@@ -34,7 +34,7 @@ from enum import Enum
 class OFile(Enum):
     JSON = 0
     SQLITE3 = 1
-    XLXS = 2
+    XLSX = 2
     CSV = 3
 
 # Set some globals
@@ -185,7 +185,7 @@ def worker(queue, thread_id, progressbar, data_processed):
 
             log.debug(f"[T|{thread_id}]: Hash \t-> {hash_result.hex()}")
 
-            if data_out_mode == OFile.JSON or data_out_mode == OFile.CSV:
+            if data_out_mode != OFile.SQLITE3:
                 data_converted[file_name_wordlist.name].update({
                     hash_result.hex():item
                 })
@@ -289,6 +289,22 @@ def main(file:str, threads:int = 1, debug = False):
             
             w.writerows(rows.items())
         f.close()
+    elif data_out_mode == OFile.XLSX:
+        from openpyxl import Workbook
+        xlsx = Workbook()
+        sheet = xlsx.active
+        sheet.title = 'wd2ntlm'
+
+
+        sheet["A1"] = "HASH"
+        sheet["B1"] = "WORD"
+
+        for row, (hash, word) in enumerate(data_converted.get(list(data_converted.keys())[0]).items(), start=2):
+            sheet [f"A{row}"] = hash
+            sheet [f"B{row}"] = word
+
+        xlsx.save(f"{file_name_ntlmhashes}.{data_out_mode.name.lower()}")
+
 
     return
 
@@ -305,7 +321,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog=__name__,
                                      description='Convert passwords from a file to ntlm hashes. \
                                         The output can be selected between json, sqlite3(default)\
-                                        , xlxs and csv.',)
+                                        , xlsx and csv.',)
 
     general_group = parser.add_argument_group('General Options')
     style_group = parser.add_argument_group('Output Options')
@@ -332,7 +348,7 @@ if __name__ == "__main__":
                         action='store_true',
                         required=False,
                         help='output file should be in JSON fromat.')
-    style_group.add_argument('--xlxs',
+    style_group.add_argument('--xlsx',
                         action='store_true',
                         required=False,
                         help='output file should be in Excel fromat.')
@@ -352,8 +368,8 @@ if __name__ == "__main__":
         data_out_mode: OFile = OFile.CSV
     elif args.json:
         data_out_mode: OFile = OFile.JSON
-    elif args.xlxs:
-        data_out_mode: OFile = OFile.XLXS
+    elif args.xlsx:
+        data_out_mode: OFile = OFile.XLSX
 
     file_name_ntlmhashes = Path(f"{args.out}")
 
