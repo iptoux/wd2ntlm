@@ -27,9 +27,17 @@ from datetime import datetime, timezone
 import threading
 import hashlib
 import sqlite3
-import json
 
 from enum import Enum
+
+# Imports for output formats
+import csv
+import json
+from openpyxl import Workbook
+from openpyxl.utils.cell import get_column_letter
+from openpyxl.styles import Font
+
+
 
 class OFile(Enum):
     JSON = 0
@@ -205,6 +213,49 @@ def fileLoad(file: Path, threads: int = 1):
     return
 
 def fileSave(format):
+
+    def saveJson():
+        with open(f"{file_name_ntlmhashes}.json",'w') as f:
+            f.write(json.dumps(data_converted,indent=4))
+        f.close()
+    def saveCSV():
+        with open(f"{file_name_ntlmhashes}.csv",'w') as f:
+            w = csv.writer(f)
+            rows = data_converted.get(list(data_converted.keys())[0])
+            w.writerows(rows.items())
+        f.close()
+    def saveXlsx():        
+        xlsx = Workbook()
+        sheet = xlsx.active
+        sheet.title = 'wd2ntlm'
+        
+        headers = ['HASH','WORD']
+        sheet.append(headers)
+
+        row=2
+        sheet.cell(row=row-1, column=1).font = Font(bold=True)
+        sheet.cell(row=row-1, column=2).font = Font(bold=True)
+        sheet.column_dimensions[get_column_letter(1)].width = 50
+        sheet.column_dimensions[get_column_letter(2)].width = 20
+
+        for row, (hash, word) in enumerate(data_converted.get(list(data_converted.keys())[0]).items(), start=2):
+             sheet[f"A{row}"] = hash
+             sheet[f"B{row}"] = word
+
+        xlsx.save(f"{file_name_ntlmhashes}.xlsx")
+
+    match format:
+        case OFile.JSON:
+            saveJson()
+            log.debug("Called saveJson()")
+        case OFile.XLSX:
+            saveXlsx()
+            log.debug("Called saveXlsx()")
+        case OFile.CSV:
+            saveCSV()
+            log.debug("Called saveCsv()")
+
+            pass
     return
 
 def worker(queue, thread_id, progressbar, data_processed):
@@ -373,45 +424,11 @@ def main(file:str, threads:int = 1, debug = False):
     log.info(f"Saving data to file: {file_name_ntlmhashes}.{data_out_mode.name.lower()}")
 
     if data_out_mode == OFile.JSON:
-        with open(f"{file_name_ntlmhashes}.json",'w') as f:
-            f.write(json.dumps(data_converted,indent=4))
-        f.close()
+        fileSave(OFile.JSON)
     elif data_out_mode == OFile.CSV:
-        import csv
-        
-        with open(f"{file_name_ntlmhashes}.csv",'w') as f:
-            w = csv.writer(f)
-
-            rows = data_converted.get(list(data_converted.keys())[0])
-            
-            w.writerows(rows.items())
-        f.close()
+        fileSave(OFile.CSV)        
     elif data_out_mode == OFile.XLSX:
-        from openpyxl import Workbook
-        from openpyxl.utils.cell import get_column_letter
-        from openpyxl.styles import Font
-
-        xlsx = Workbook()
-        sheet = xlsx.active
-        sheet.title = 'wd2ntlm'
-        
-        headers = ['HASH','WORD']
-        sheet.append(headers)
-
-        row=2
-        sheet.cell(row=row-1, column=1).font = Font(bold=True)
-        sheet.cell(row=row-1, column=2).font = Font(bold=True)
-        sheet.column_dimensions[get_column_letter(1)].width = 50
-        sheet.column_dimensions[get_column_letter(2)].width = 20
-
-
-        for row, (hash, word) in enumerate(data_converted.get(list(data_converted.keys())[0]).items(), start=2):
-             sheet[f"A{row}"] = hash
-             sheet[f"B{row}"] = word
-
-        xlsx.save(f"{file_name_ntlmhashes}.{data_out_mode.name.lower()}")
-
-
+        fileSave(OFile.XLSX)
     return
 
 
