@@ -4,9 +4,9 @@ Wordlist 2 'NTLM' hashes.
 
 ## How does it work?
 
-Convert a file with words like rockyou.txt to a sqlite3 database with words and corresponding ntlm hash.
+Convert a file with words like rockyou.txt to a sqlite3/json/csv/xlsx database with words and corresponding ntlm hash.
 
-SQLite3 is the default because it's used as a backend to store passwords on error/abort. You can select other formats on the command line by selecting with argument.
+SQLite3 is the default because it's used as a backend to store passwords on error/abort. You can select other formats on the command line by selecting with argument. It checks for dupes (shows dupes on debug output) to minimize overhead.
 
 ```bash
 Output Options:
