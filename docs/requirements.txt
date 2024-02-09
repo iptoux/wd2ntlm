@@ -1,3 +1,5 @@
 myst_parser
 sphinx-design
 pydata-sphinx-theme
+sphinx_book_theme
+furo

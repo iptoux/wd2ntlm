@@ -1,5 +1,2 @@
 enlighten
 openpyxl
-myst_parser
-sphinx-design
-
